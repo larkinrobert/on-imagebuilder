@@ -15,4 +15,4 @@ discovery_overlay_package_manifest:
   - { package: "apt-utils",       version: "1.0.1ubuntu2.11"}
   - { package: "parted",          version: "2.3-19ubuntu1.14.04.1"}
 
-raid_overlay_storcli_package: "storcli_1.17.08_all.deb"
+raid_overlay_storcli_package: "perccli_1.11.03-2_all_storclisymlink.deb"
