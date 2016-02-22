@@ -12,7 +12,7 @@ Vagrant.configure('2') do |config|
     end
   end
 
-  DEFAULT_VAGRANT_BOX = 'ubuntu/trusty64'
+  DEFAULT_VAGRANT_BOX = "rackhd/rackhd"
 
   def set_box(vm_def)
     vm_def.vm.box = ENV['VAGRANT_BOX'] || DEFAULT_VAGRANT_BOX
@@ -28,29 +28,32 @@ Vagrant.configure('2') do |config|
         vb.memory = ENV['VAGRANT_VM_MEM']
       end
     end
-    if ENV['VAGRANT_VM_CPU']
-      vm_def.vm.provider 'virtualbox' do |vb|
-        vb.cpus = ENV['VAGRANT_VM_CPU']
-      end
+  end
+
+  if ENV['VAGRANT_VM_CPU']
+    vm_def.vm.provider 'virtualbox' do |vb|
+      vb.cpus = ENV['VAGRANT_VM_CPU']
     end
   end
 
-  config.vm.define :imagebuilder01 do |imagebuilder01|
-
-    configure_proxy(imagebuilder01)
-    set_box(imagebuilder01)
-    configure_vm_size(imagebuilder01)
-    imagebuilder01.vm.network :private_network, ip: '192.168.37.2'
-    imagebuilder01.vm.hostname = 'imagebuilder01'
-    end
+  config.vm.box = "rackhd/rackhd"
+  
+  config.vm.define :rackhd01 do |rackhd01|
+    config.vm.box_check_update = true
+    rackhd01.vm.synced_folder "builds", "/builds"
+    rackhd01.vm.synced_folder "../../on-imagebuilder", "/repo"
     rackhd01.vm.provider 'virtualbox' do |vb|
       vb.cpus = '2'
       vb.memory = '2048'
-      v.customize ["modifyvm", :id, "--nictype1", "virtio"]
+      vb.customize ["modifyvm", :id, "--nictype1", "virtio"]
     end
-      config.vm.provision "shell", inline: <<-SHELL
-    cd /vagrant
-    sudo ansible-playbook -i hosts all.yml
-  SHELL
   end
+  
+  config.vm.provision "shell", inline: <<-SHELL
+    sudo apt-get -y install python-pip
+    sudo pip install ansible==1.9.4
+    cd /repo
+    sudo ansible-playbook -i hosts all.yml
+    mv /tmp/on-imagebuilder/builds/* /builds/
+  SHELL
 end
